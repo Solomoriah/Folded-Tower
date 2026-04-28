@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Folded Tower of Coldarius -- Standard Room Generator
 # Copyright 2019, 2026 Chris Gonnerman
 # All rights reserved.
@@ -40,10 +42,185 @@ sys.path.append(dngpath)
 
 roomdescription = """
 <text:p text:style-name="MapKeyHeading">%(roomnumber)s. <text:span text:style-name="T20">%(roomtitle)s</text:span>: </text:p>
+%(prenote)s
 <text:p text:style-name="BoxedText">%(boxedtext)s </text:p>
+%(notes)s
 """
 
-from DungeoneerNG import Dice, Stocker, ODT
+from DungeoneerNG import Dice, ODT
+
+mapinfo = {
+     1: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     2: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     3: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     4: {
+            "balcony": 2,
+            "secret": 0,
+        },
+     5: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     6: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     7: {
+            "balcony": 0,
+            "secret": 0,
+        },
+     8: {
+            "balcony": 0,
+            "secret": 1,
+        },
+     9: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    10: {
+            "balcony": 0,
+            "secret": 1,
+        },
+    11: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    12: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    13: {
+            "balcony": 1,
+            "secret": 0,
+        },
+    14: {
+            "balcony": 1,
+            "secret": 0,
+        },
+    15: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    16: {
+            "balcony": 0,
+            "secret": 1,
+        },
+    17: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    18: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    19: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    20: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    21: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    22: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    23: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    24: {
+            "balcony": 0,
+            "secret": 0,
+        },
+    25: {
+            "balcony": 0,
+            "secret": 2,
+        },
+}
+
+roomtypes = [
+    0,
+    ( 5, "Antechamber"),
+    ( 3, "Armory"),
+    ( 7, "Audience"),
+    ( 2, "Aviary"),
+    ( 7, "Banquet Room"),
+    ( 4, "Barracks"),
+    ( 6, "Bath"),
+    (10, "Bedroom"),
+    ( 2, "Bestiary"),
+    ( 1, "Cell"),
+    ( 1, "Chantry"),
+    ( 2, "Chapel"),
+    ( 1, "Cistern"),
+    ( 3, "Classroom"),
+    ( 8, "Closet"),
+    ( 2, "Conjuring"),
+    ( 5, "Corridor"),
+    ( 1, "Courtroom"),
+    ( 1, "Crypt"),
+    ( 7, "Dining Room"),
+    ( 2, "Divination Room"),
+    ( 6, "Dormitory"),
+    ( 4, "Dressing Room"),
+    ( 3, "Gallery"),
+    ( 3, "Game Room"),
+    ( 4, "Great Hall"),
+    ( 5, "Guardroom"),
+    ( 6, "Hall"),
+    ( 1, "Harem"),
+    ( 1, "Seraglio"),
+    ( 2, "Kennel"),
+    ( 6, "Kitchen"),
+    ( 3, "Laboratory"),
+    ( 3, "Library"),
+    ( 7, "Lounge"),
+    ( 3, "Meditation Room"),
+    ( 2, "Museum"),
+    ( 1, "Observatory"),
+    ( 7, "Office"),
+    ( 6, "Pantry"),
+    ( 2, "Prison"),
+    ( 1, "Privy"),
+    ( 4, "Reception Room"),
+    ( 3, "Refectory"),
+    ( 2, "Robing Room"),
+    ( 2, "Shrine"),
+    ( 7, "Sitting Room"),
+    ( 3, "Smithy"),
+    ( 1, "Solar"),
+    ( 4, "Stable"),
+    ( 6, "Storage"),
+    ( 1, "Vault"),
+    ( 1, "Strongroom"),
+    ( 5, "Study"),
+    ( 1, "Temple"),
+    ( 1, "Throne Room"),
+    ( 1, "Torture Chamber"),
+    ( 2, "Training Room"),
+    ( 2, "Trophy Room"),
+    ( 8, "Vestibule"),
+    ( 6, "Waiting Room"),
+    ( 3, "Water Closet"),
+    ( 3, "Well"),
+    ( 4, "Workroom"),
+    ( 6, "Workshop"),
+]
+
 
 lighting = [
     0,
@@ -119,11 +296,11 @@ ceiling = [
 
 descriptions = [
     0,
-    (1, "This room is %(lighting)s. " +
+    (1, "This %(roomtype)s is %(lighting)s. " +
         "The floor is covered with %(floor)s, " +
         "the walls with %(walls)s, and " +
         "the ceiling with %(ceiling)s."),
-    (1, "This %(lighting)s room has a floor of %(floor)s, " +
+    (1, "This %(lighting)s %(roomtype)s has a floor of %(floor)s, " +
         "walls of %(walls)s, and on the ceiling is %(ceiling)s."),
 ]
 
@@ -138,12 +315,20 @@ for i in range(1, 8):
         for n in range(1, 26):
             outdata = {
                 "roomnumber": "%d%s%d" % (i, q, n),
-                "roomtitle":  Dice.tableroller(Stocker.roomtypes)[1].upper(),
+                "roomtitle":  Dice.tableroller(roomtypes)[1].upper(),
+                "prenote": "",
+                "notes": "",
             }
 
             room = {}
-
             room["lighting"] = Dice.tableroller(lighting)[1]
+            room["roomtype"] = "room"
+
+            if mapinfo[n]["secret"] == 1:
+                outdata["roomtitle"] = "SECRET ROOM"
+            elif mapinfo[n]["secret"] == 2:
+                outdata["roomtitle"] = "SECRET CORRIDOR"
+                room["roomtype"] = "corridor"
 
             room["floor"] = Dice.tableroller(flooring)
             if len(room["floor"]) == 2:
